@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,7 +12,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace DevEx.OOXml.Spreadsheet
 {
-    class Sheet
+    public class Sheet
     {
         private string name;
         private uint sheetId;
@@ -30,21 +30,41 @@ namespace DevEx.OOXml.Spreadsheet
         }
     }
 
-    class SheetCollection : ReadOnlyCollection<Spreadsheet.Sheet>
+    public class SheetCollection : System.Collections.Generic.IReadOnlyCollection<Spreadsheet.Sheet>
     {
-        public SheetCollection(IList<Spreadsheet.Sheet> list) : base(list)
+        System.Collections.Generic.List<Spreadsheet.Sheet> sheetList = null;
+
+        public SheetCollection()
         {
-
-
+            this.sheetList = new System.Collections.Generic.List<Spreadsheet.Sheet>();
         }
 
-        internal void AddSheet(Spreadsheet.Sheet sheet)
+        public SheetCollection(System.Collections.Generic.IList<Spreadsheet.Sheet> sheets)
         {
-            
+            this.sheetList = new System.Collections.Generic.List<Spreadsheet.Sheet>();
+            this.sheetList.AddRange(sheets);
+        }
+
+        public int Count
+        {
+            get
+            {
+                return sheetList.Count;
+            }
+        }
+
+        public IEnumerator<Spreadsheet.Sheet> GetEnumerator()
+        {
+            return this.sheetList.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 
-    class Workbook
+    public class Workbook
     {
         private SheetCollection sheets;
 
@@ -58,7 +78,7 @@ namespace DevEx.OOXml.Spreadsheet
 
 namespace DevEx.OOXml
 {
-    class SpreadsheetFile : IDisposable
+    public class SpreadsheetFile : IDisposable
     {
         private FileInfo fileSystemInfo = null;
         private SpreadsheetDocument documentXmlPackage = null;
