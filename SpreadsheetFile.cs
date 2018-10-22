@@ -22,7 +22,7 @@ namespace DevEx.OOXml.Spreadsheet
         public uint SheetId { get { return this.sheetId; } }
         public string Id { get { return this.id; } }
 
-        public Sheet(string name, uint sheetId, string id)
+        internal Sheet(string name, uint sheetId, string id)
         {
             this.name = name;
             this.sheetId = sheetId;
@@ -30,37 +30,69 @@ namespace DevEx.OOXml.Spreadsheet
         }
     }
 
-    public class SheetCollection : System.Collections.Generic.IReadOnlyCollection<Spreadsheet.Sheet>
+    public class SheetCollection : IEnumerable<Spreadsheet.Sheet>
     {
-        System.Collections.Generic.List<Spreadsheet.Sheet> sheetList = null;
+        private List<Spreadsheet.Sheet> list = null;
 
-        public SheetCollection()
+        internal SheetCollection()
         {
-            this.sheetList = new System.Collections.Generic.List<Spreadsheet.Sheet>();
+            this.list = new List<Sheet>();
         }
 
-        public SheetCollection(System.Collections.Generic.IList<Spreadsheet.Sheet> sheets)
+        internal SheetCollection(IList<Sheet> list) : this()
         {
-            this.sheetList = new System.Collections.Generic.List<Spreadsheet.Sheet>();
-            this.sheetList.AddRange(sheets);
+            using (IEnumerator<Sheet> enumerator = list.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    this.Add(enumerator.Current);
+                }
+            }
         }
 
         public int Count
         {
-            get
-            {
-                return sheetList.Count;
-            }
+            get { return this.list.Count; }
         }
 
-        public IEnumerator<Spreadsheet.Sheet> GetEnumerator()
+        public bool IsReadOnly
         {
-            return this.sheetList.GetEnumerator();
+            get { return true; }
+        }
+
+        internal void Add(Sheet item)
+        {
+            this.list.Add(item);
+        }
+
+        internal void Clear()
+        {
+            this.list.Clear();
+        }
+
+        public bool Contains(Sheet item)
+        {
+            return this.list.Contains(item);
+        }
+
+        public void CopyTo(Sheet[] array, int arrayIndex)
+        {
+            this.list.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<Sheet> GetEnumerator()
+        {
+            return this.list.GetEnumerator();
+        }
+
+        internal bool Remove(Sheet item)
+        {
+            return this.list.Remove(item);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return this.list.GetEnumerator();
         }
     }
 
@@ -68,10 +100,28 @@ namespace DevEx.OOXml.Spreadsheet
     {
         private SheetCollection sheets;
 
-        public Workbook()
+        public SheetCollection Sheets
         {
-            this.sheets = new SheetCollection(new List<Spreadsheet.Sheet>());
-            
+            get { return sheets; }
+        }
+
+        internal Workbook(ref SpreadsheetDocument spreadsheetDocument)
+        {
+            this.sheets = new SheetCollection();
+        }
+
+        public void AddSheet(Sheet item)
+        {
+
+
+            this.sheets.Add(item);
+        }
+
+        public bool RemoveSheet(Sheet item)
+        {
+            bool pkgSheetRemoved = false;
+
+            return this.sheets.Remove(item) & pkgSheetRemoved;
         }
     }
 }
@@ -82,14 +132,15 @@ namespace DevEx.OOXml
     {
         private FileInfo fileSystemInfo = null;
         private SpreadsheetDocument documentXmlPackage = null;
+        private Spreadsheet.Workbook workBook = null;
 
         public FileInfo FileSystemInfo { get => fileSystemInfo; }
         public SpreadsheetDocument DocumentXmlPackage { get => documentXmlPackage; }
+        public Spreadsheet.Workbook WorkBook { get => workBook; }
 
         private SpreadsheetFile(string filePath)
         {
             this.fileSystemInfo = new FileInfo(filePath);
-
         }
 
         public static SpreadsheetFile NewSpreadsheetFile(string filePath, SpreadsheetDocumentType documentType)
@@ -100,6 +151,8 @@ namespace DevEx.OOXml
                 newFile.documentXmlPackage = SpreadsheetDocument.Create(filePath, documentType);
                 WorkbookPart wbPart = newFile.documentXmlPackage.AddWorkbookPart();
                 wbPart.Workbook = new Workbook();
+
+                newFile.workBook = new Spreadsheet.Workbook(ref newFile.documentXmlPackage);
 
                 return newFile;
             }
