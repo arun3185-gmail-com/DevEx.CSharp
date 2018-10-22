@@ -130,6 +130,8 @@ namespace DevEx.OOXml
 {
     public class SpreadsheetFile : IDisposable
     {
+        static char[] alphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+
         private FileInfo fileSystemInfo = null;
         private SpreadsheetDocument documentXmlPackage = null;
         private Spreadsheet.Workbook workBook = null;
@@ -169,6 +171,39 @@ namespace DevEx.OOXml
                 return newFile;
             }
             catch { throw; }
+        }
+
+        public static string ConvertColumnNumberToName(int number)
+        {
+            if (number < 1) { throw new ArgumentOutOfRangeException("number", "value must be greater than or equal to 1"); }
+            
+            int mod = number % 26;
+            int coefOf26 = (number - mod) / 26;
+            int coefOf676 = (number - (26 * coefOf26) - mod) / 676;
+            StringBuilder colNameBuilder = new StringBuilder(3);
+
+            if (coefOf676 == 0) colNameBuilder.Append(alphas[25]);
+            else if (coefOf676 > 0) colNameBuilder.Append(alphas[mod - 1]);
+
+            if (coefOf26 == 0) colNameBuilder.Append(alphas[25]);
+            else if (coefOf26 > 0) colNameBuilder.Append(alphas[mod - 1]);
+
+            if (mod == 0) colNameBuilder.Append(alphas[25]);
+            else if (mod > 0) colNameBuilder.Append(alphas[mod - 1]);
+
+            return colNameBuilder.ToString();
+        }
+
+        public static int ConvertColumnNameToNumber(string name)
+        {
+            int colNameLength = name.Length;
+            int number = 0;
+
+            if (colNameLength >= 1) number += Array.IndexOf(alphas, name[colNameLength - 1]) + 1;
+            if (colNameLength >= 2) number += 26 * (Array.IndexOf(alphas, name[colNameLength - 2]) + 1);
+            if (colNameLength >= 3) number += 676 * (Array.IndexOf(alphas, name[colNameLength - 3]) + 1);
+
+            return number;
         }
 
         #region IDisposable Support
