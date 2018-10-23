@@ -217,11 +217,7 @@ namespace DevEx.OOXml.Spreadsheet
             {
                 sheets = this.workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
             }
-            else
-            {
-                sheets = this.workbookPart.Workbook.Sheets;
-            }
-            sheets.Append(sheet);
+            this.workbookPart.Workbook.Sheets.Append(sheet);
 
             Spreadsheet.Sheet newSheet = new Spreadsheet.Sheet(ref wsPart, ref sheet);
             this.sheetCollection.Add(newSheet);
