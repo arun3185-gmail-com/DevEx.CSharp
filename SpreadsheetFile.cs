@@ -14,34 +14,66 @@ namespace DevEx.OOXml.Spreadsheet
 {
     public class Sheet
     {
-        private string name;
-        private uint sheetId;
-        private string id;
+        private DocumentFormat.OpenXml.Packaging.WorksheetPart worksheetPart = null;
+        private DocumentFormat.OpenXml.Spreadsheet.Worksheet worksheet = null;
+        private DocumentFormat.OpenXml.Spreadsheet.SheetData sheetData = null;
+        private DocumentFormat.OpenXml.Spreadsheet.Sheet sheet = null;
 
-        public string Name { get { return this.name; } }
-        public uint SheetId { get { return this.sheetId; } }
-        public string Id { get { return this.id; } }
-
-        internal Sheet(string name, uint sheetId, string id)
+        public DocumentFormat.OpenXml.Packaging.WorksheetPart WorksheetPart
         {
-            this.name = name;
-            this.sheetId = sheetId;
-            this.id = id;
+            get { return this.worksheetPart; }
+        }
+
+        public DocumentFormat.OpenXml.Spreadsheet.Worksheet Worksheet
+        {
+            get { return this.worksheet; }
+        }
+
+        public DocumentFormat.OpenXml.Spreadsheet.SheetData SheetData
+        {
+            get { return this.sheetData; }
+        }
+        
+        public uint SheetId
+        {
+            get { return this.sheet.SheetId; }
+        }
+
+        public DocumentFormat.OpenXml.StringValue Id
+        {
+            get { return this.sheet.id; }
+        }
+
+        public DocumentFormat.OpenXml.StringValue Name 
+        {
+            get { return this.sheet.Name; } 
+        }
+
+        internal Sheet(ref DocumentFormat.OpenXml.Spreadsheet.Worksheet worksheetPart, ref DocumentFormat.OpenXml.Spreadsheet.Sheet sheet)
+        {
+            this.worksheetPart = worksheetPart;
+            this.worksheet = this.worksheetPart.worksheet;
+            this.sheetData = this.worksheet.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.SheetData>();
+            this.sheet = sheet;
         }
     }
 
     public class SheetCollection : IEnumerable<Spreadsheet.Sheet>
     {
+        private DocumentFormat.OpenXml.Packaging.WorkbookPart workbookPart;
+        private DocumentFormat.OpenXml.Spreadsheet.Sheets sheets = null;
         private List<Spreadsheet.Sheet> list = null;
 
-        internal SheetCollection()
+        internal SheetCollection(ref DocumentFormat.OpenXml.Packaging.WorkbookPart workbookPart)
         {
-            this.list = new List<Sheet>();
+            this.workbookPart = workbookPart;
+            sheets = this.workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
+            this.list = new List<Spreadsheet.Sheet>();
         }
 
-        internal SheetCollection(IList<Sheet> list) : this()
+        internal SheetCollection(ref DocumentFormat.OpenXml.Packaging.WorkbookPart workbookPart, IList<Spreadsheet.Sheet> list) : this(ref workbookPart)
         {
-            using (IEnumerator<Sheet> enumerator = list.GetEnumerator())
+            using (IEnumerator<Spreadsheet.Sheet> enumerator = list.GetEnumerator())
             {
                 while (enumerator.MoveNext())
                 {
@@ -60,7 +92,7 @@ namespace DevEx.OOXml.Spreadsheet
             get { return true; }
         }
 
-        internal void Add(Sheet item)
+        internal void Add(Spreadsheet.Sheet item)
         {
             this.list.Add(item);
         }
@@ -70,22 +102,22 @@ namespace DevEx.OOXml.Spreadsheet
             this.list.Clear();
         }
 
-        public bool Contains(Sheet item)
+        public bool Contains(Spreadsheet.Sheet item)
         {
             return this.list.Contains(item);
         }
 
-        public void CopyTo(Sheet[] array, int arrayIndex)
+        public void CopyTo(Spreadsheet.Sheet[] array, int arrayIndex)
         {
             this.list.CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<Sheet> GetEnumerator()
+        public IEnumerator<Spreadsheet.Sheet> GetEnumerator()
         {
             return this.list.GetEnumerator();
         }
 
-        internal bool Remove(Sheet item)
+        internal bool Remove(Spreadsheet.Sheet item)
         {
             return this.list.Remove(item);
         }
@@ -98,7 +130,9 @@ namespace DevEx.OOXml.Spreadsheet
 
     public class Workbook
     {
-        private SheetCollection sheets;
+        private SpreadsheetDocument spreadsheetDocument;
+        private DocumentFormat.OpenXml.Packaging.WorkbookPart workbookPart;
+        private Spreadsheet.SheetCollection sheetCollection;
 
         public SheetCollection Sheets
         {
@@ -107,21 +141,32 @@ namespace DevEx.OOXml.Spreadsheet
 
         internal Workbook(ref SpreadsheetDocument spreadsheetDocument)
         {
-            this.sheets = new SheetCollection();
+            this.spreadsheetDocument = spreadsheetDocument;
+            this.workbookPart = this.spreadsheetDocument.AddWorkbookPart();
+            this.workbookPart.Workbook = new DocumentFormat.OpenXml.Spreadsheet.Workbook();
+            
+            this.sheetCollection = new Spreadsheet.SheetCollection(ref this.workbookPart);
         }
 
-        public void AddSheet(Sheet item)
+        public void AddSheet(string name)
         {
-
-
-            this.sheets.Add(item);
+            DocumentFormat.OpenXml.Packaging.WorksheetPart wsPart = wbPart.AddNewPart<DocumentFormat.OpenXml.Packaging.WorksheetPart>();
+            wsPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(new DocumentFormat.OpenXml.Spreadsheet.SheetData());
+            
+            DocumentFormat.OpenXml.Spreadsheet.Sheet sheet = new DocumentFormat.OpenXml.Spreadsheet.Sheet();
+            sheet.Id = workbookPart.GetIdOfPart(wsPart);
+            sheet.SheetId = sheetId;
+            sheet.Name = sheetName;
+            
+            Spreadsheet.Sheet newSheet = new Spreadsheet.Sheet(ref wsPart, ref sheet);
+            this.sheets.Add(newSheet);
         }
 
-        public bool RemoveSheet(Sheet item)
+        public bool RemoveSheet(Spreadsheet.Sheet item)
         {
             bool pkgSheetRemoved = false;
 
-            return this.sheets.Remove(item) & pkgSheetRemoved;
+            return (this.sheets.Remove(item) & pkgSheetRemoved);
         }
     }
 }
@@ -134,11 +179,11 @@ namespace DevEx.OOXml
 
         private FileInfo fileSystemInfo = null;
         private SpreadsheetDocument documentXmlPackage = null;
-        private Spreadsheet.Workbook workBook = null;
+        private Spreadsheet.Workbook workbook = null;
 
-        public FileInfo FileSystemInfo { get => fileSystemInfo; }
-        public SpreadsheetDocument DocumentXmlPackage { get => documentXmlPackage; }
-        public Spreadsheet.Workbook WorkBook { get => workBook; }
+        public FileInfo FileSystemInfo { get => this.fileSystemInfo; }
+        public SpreadsheetDocument DocumentXmlPackage { get => this.documentXmlPackage; }
+        public Spreadsheet.Workbook Workbook { get => this.workbook; }
 
         private SpreadsheetFile(string filePath)
         {
@@ -150,11 +195,12 @@ namespace DevEx.OOXml
             try
             {
                 SpreadsheetFile newFile = new SpreadsheetFile(filePath);
+                if (newFile.fileSystemInfo.Exists)
+                {
+                    throw new Exception("file already exist in the given path");
+                }
                 newFile.documentXmlPackage = SpreadsheetDocument.Create(filePath, documentType);
-                WorkbookPart wbPart = newFile.documentXmlPackage.AddWorkbookPart();
-                wbPart.Workbook = new Workbook();
-
-                newFile.workBook = new Spreadsheet.Workbook(ref newFile.documentXmlPackage);
+                newFile.AddWorkbook();
 
                 return newFile;
             }
@@ -166,11 +212,37 @@ namespace DevEx.OOXml
             try
             {
                 SpreadsheetFile newFile = new SpreadsheetFile(filePath);
-                newFile.documentXmlPackage = SpreadsheetDocument.Open(filePath, isEditable);
+                if (newFile.fileSystemInfo.Exists)
+                {
+                    newFile.documentXmlPackage = SpreadsheetDocument.Open(filePath, isEditable);
+                }
+                else
+                {
+                    throw new Exception("file does not exist in the given path");
+                }
+                
 
                 return newFile;
             }
             catch { throw; }
+        }
+
+        private void AddWorkbook()
+        {
+            if (this.workbook == null)
+            {
+                this.workbook = new Spreadsheet.Workbook(ref this.documentXmlPackage);
+            }
+        }
+
+        public void Save()
+        {
+            this.documentXmlPackage.WorkbookPart.Workbook.Save();
+        }
+
+        public void Close()
+        {
+            this.documentXmlPackage.Close();
         }
 
         public static string ConvertColumnNumberToName(int number)
@@ -217,6 +289,7 @@ namespace DevEx.OOXml
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects).
+                    documentXmlPackage.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -227,7 +300,8 @@ namespace DevEx.OOXml
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~SpreadsheetFile() {
+        // ~SpreadsheetFile()
+        // {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
         // }
