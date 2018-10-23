@@ -202,9 +202,10 @@ namespace DevEx.OOXml.Spreadsheet
             wsPart = this.workbookPart.AddNewPart<DocumentFormat.OpenXml.Packaging.WorksheetPart>();
             wsPart.Worksheet = new DocumentFormat.OpenXml.Spreadsheet.Worksheet(new DocumentFormat.OpenXml.Spreadsheet.SheetData());
 
-            if (this.workbookPart.Workbook.Sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Count() > 0)
+            sheets = this.workbookPart.Workbook.GetFirstChild<DocumentFormat.OpenXml.Spreadsheet.Sheets>();
+            if (sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Count() > 0)
             {
-                maxSheetId = this.workbookPart.Workbook.Sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Last().SheetId.Value;
+                maxSheetId = sheets.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>().Select(s => s.SheetId.Value).Max();
                 maxSheetId++;
             }
 
@@ -213,11 +214,12 @@ namespace DevEx.OOXml.Spreadsheet
             sheet.SheetId = maxSheetId;
             sheet.Name = sheetName;
 
-            if (this.workbookPart.Workbook.Sheets == null)
-            {
-                sheets = this.workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
-            }
-            this.workbookPart.Workbook.Sheets.Append(sheet);
+            //if (this.workbookPart.Workbook.Sheets == null)
+            //{
+            //    sheets = this.workbookPart.Workbook.AppendChild(new DocumentFormat.OpenXml.Spreadsheet.Sheets());
+            //}
+            
+            sheets.Append(sheet);
 
             Spreadsheet.Sheet newSheet = new Spreadsheet.Sheet(ref wsPart, ref sheet);
             this.sheetCollection.Add(newSheet);
