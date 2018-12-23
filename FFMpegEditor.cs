@@ -12,7 +12,7 @@ namespace FFMpegHelper
 
     }
 
-    class VideoPackageInfo
+    class VideoPackageInfo : ICloneable
     {
         FrameInfo[] frameInfos;
         DirectoryInfo framesFolderInfo;
@@ -25,11 +25,22 @@ namespace FFMpegHelper
 
         }
 
+        public object Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        public VideoPackageInfo MakeCopy()
+        {
+            throw new NotImplementedException();
+        }
+
         public void RunOperation()
         {
 
         }
     }
+
     class FrameInfo
     {
         FileInfo frameFileInfo;
@@ -43,7 +54,7 @@ namespace FFMpegHelper
 
         public FrameInfo()
         {
-            
+
         }
     }
 }
