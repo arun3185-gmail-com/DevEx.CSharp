@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +12,24 @@ namespace FFMpegHelper
 
     }
 
+    class VideoPackageInfo
+    {
+        FrameInfo[] frameInfos;
+        DirectoryInfo framesFolderInfo;
+        DirectoryInfo targetFolderInfo;
+        FileInfo videoFileInfo;
+
+
+        public VideoPackageInfo()
+        {
+
+        }
+
+        public void RunOperation()
+        {
+
+        }
+    }
     class FrameInfo
     {
         FileInfo frameFileInfo;
