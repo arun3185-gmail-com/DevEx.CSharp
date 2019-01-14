@@ -9,33 +9,49 @@ namespace FFMpegHelper
 {
     class FFMpegEditor
     {
-
+        public static void Run()
+        {
+            VideoFrameGenerator vfGenProj1 = new VideoFrameGenerator(null, null, null);
+            //vfGenProj1.LoadFrameInfos();
+            //vfGenProj1.RunOperation();
+        }
     }
 
-    class VideoPackageInfo : ICloneable
+    class VideoFrameGenerator
     {
         FrameInfo[] frameInfos;
-        DirectoryInfo framesFolderInfo;
+
+        FileInfo configFileInfo;
+        DirectoryInfo sourceFolderInfo;
         DirectoryInfo targetFolderInfo;
-        FileInfo videoFileInfo;
+
+        TimeSpan videoDuration;
+        double framesPerSecond;
+        TimeSpan milliSecondsPerFrame;
 
 
-        public VideoPackageInfo()
+        public VideoFrameGenerator(FileInfo configFileInfo, DirectoryInfo sourceFolderInfo, DirectoryInfo targetFolderInfo)
         {
-
+            this.configFileInfo = configFileInfo;
+            this.sourceFolderInfo = sourceFolderInfo;
+            this.targetFolderInfo = targetFolderInfo;
         }
 
-        public object Clone()
+        public void LoadFrameInfos()
         {
-            throw new NotImplementedException();
-        }
 
-        public VideoPackageInfo MakeCopy()
-        {
-            throw new NotImplementedException();
         }
 
         public void RunOperation()
+        {
+            //frameInfo CreateFrames
+            foreach (FrameInfo frameInfo in frameInfos)
+            {
+                //frameInfo CreateFrames
+            }
+        }
+
+        public void CreateFrames()
         {
 
         }
@@ -43,18 +59,39 @@ namespace FFMpegHelper
 
     class FrameInfo
     {
-        FileInfo frameFileInfo;
+        FilterInfo[] referredFilterInfos;
+
         TimeSpan frameDuration;
         DateTime startTime;
         DateTime endTime;
 
-        static double framesPerSecond;
-        static TimeSpan milliSecondsPerFrame;
+        VideoFrameGenerator parent;
+        public FrameInfo(VideoFrameGenerator parent)
+        {
+            this.parent = parent;
+        }
 
-
-        public FrameInfo()
+        public void Create()
         {
 
         }
+    }
+
+    class FilterInfo
+    {
+        FileInfo defaultFileInfo;
+
+        FrameInfo parentFrameInfo;
+
+        private FilterInfo() { }
+        public FilterInfo(FrameInfo parentFrameInfo, FileInfo defaultFileInfo)
+        {
+
+            this.parentFrameInfo = parentFrameInfo;
+            this.defaultFileInfo = defaultFileInfo;
+        }
+
+        static FilterInfo() { Empty = new FilterInfo(); }
+        public static FilterInfo Empty { get; private set; }
     }
 }
